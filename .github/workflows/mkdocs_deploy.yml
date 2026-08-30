@@ -28,7 +28,6 @@ jobs:
 
       - name: Run mkdocs build
         run: |
-            cd ./mkdocs
             mkdocs build
 
       - name: Upload built files as artifact
