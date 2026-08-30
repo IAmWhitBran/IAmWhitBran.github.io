@@ -37,7 +37,7 @@ jobs:
         with:
             path: ./mkdocs/site/
 
-deploy:
+  deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
