@@ -1,3 +1,54 @@
-site_name: My Docs
+site_name: IAmWhitBran
+site_url: https://iamwhitbran.github.io/
+
+##################################################################
+
 theme:
   name: material
+
+  palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      primary: black
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      primary: black 
+      scheme: default 
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      primary: black 
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+  features:
+    - navigation.instant
+    - navigation.instant.progress
+    # - navigation.path # sponsors only feature
+    - navigation.indexes
+    - navigation.top
+
+##################################################################
+
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+##################################################################
+
+plugins: 
+  - search
+  - awesome-nav
+  - drawio
