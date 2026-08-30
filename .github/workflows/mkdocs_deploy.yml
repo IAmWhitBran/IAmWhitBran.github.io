@@ -2,24 +2,48 @@ name: mkdocs_deploy
 on:
   push:
     branches:
-      - master 
       - main
+
 permissions:
   contents: write
+  id-token: write
+  pages: write
+
+
+# see: https://squidfunk.github.io/mkdocs-material/publishing-your-site/
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      
+      - name: Install Python
+        uses: actions/setup-python@v5
         with:
           python-version: 3.x
-      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV 
-      - uses: actions/cache@v3
+
+      - name: Install Python requirements
+        run: pip install -r mkdocs/requirements.txt
+
+      - name: Run mkdocs build
+        run: |
+            cd ./mkdocs
+            mkdocs build
+
+      - name: Upload built files as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v3
         with:
-          key: mkdocs-material-${{ env.cache_id }}
-          path: .cache
-          restore-keys: |
-            mkdocs-material-
-      - run: pip install mkdocs-material 
-      - run: mkdocs gh-deploy --force
+            path: ./mkdocs/site/
+
+deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
