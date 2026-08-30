@@ -1,0 +1,3 @@
+mkdocs-material
+mkdocs-awesome-nav # https://lukasgeiter.github.io/mkdocs-awesome-nav/
+mkdocs-drawio # https://tuunit.github.io/mkdocs-drawio/
