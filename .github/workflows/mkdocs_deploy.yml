@@ -31,10 +31,9 @@ jobs:
             mkdocs build
 
       - name: Upload built files as artifact
-        id: deployment
         uses: actions/upload-pages-artifact@v3
         with:
-            path: ./mkdocs/site/
+            path: ./site/
 
   deploy:
     environment:
