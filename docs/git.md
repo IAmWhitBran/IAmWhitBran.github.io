@@ -3,7 +3,7 @@ layout: page
 title: "git"
 permalink: /git
 created: 2026/08/30
-updated: 2026/08/30
+updated: 2026/09/07
 review_by:
 status: seedling
 ---
@@ -47,3 +47,9 @@ Useful if accidentally committing to the wrong branch, especially if that branch
 git reset --keep HEAD~1
 ```
 Resets the files which are different between the **current** `HEAD` and the previous commit
+
+### Counting contributions
+```PowerShell
+git shortlog -snea
+```
+Runs the shortlog command with the **s**ummary, **n**umber order, **e**mail, and **a**ll flags.
