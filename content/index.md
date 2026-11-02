@@ -1,7 +1,5 @@
 ---
-layout: page
 title: "IAmWhitBran.github.io"
-permalink: /
 created: 2026/08/30
 updated: 2026/09/07
 review_by:
