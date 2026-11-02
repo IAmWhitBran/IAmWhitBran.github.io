@@ -1,0 +1,63 @@
+name: Build and deploy garden
+
+on:
+  push:
+    branches:
+      - main
+      - quartz
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Several Syncer publishes in quick succession each push a commit.
+# Cancelling superseded runs means only the latest one builds and deploys.
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Shallow checkout: every note carries its dates in frontmatter,
+      # so the build never needs Git history.
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install dependencies (includes the npm-published Quartz plugins)
+        run: npm ci
+
+      - name: Install any git-sourced Quartz plugins
+        run: npx quartz plugin install
+
+      - name: Build site
+        run: npx quartz build
+
+      # Runs on every branch and pull request, so each run leaves a
+      # downloadable copy of the built site on its summary page.
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
