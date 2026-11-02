@@ -1,7 +1,9 @@
 ---
-title: "On Gen AI"
+publish: true
 created: 2026/08/30
-updated: 2026/08/30
+modified: 2026-11-02T16:38
+published: 2026-11-02T16:38:01.391Z
+updated: 2026-11-02T16:38
 review_by:
 status: seedling
 ---

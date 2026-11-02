@@ -1,7 +1,9 @@
 ---
-title: "Kusto"
+publish: true
 created: 2026/08/30
-updated: 2026/09/07
+modified: 2026-11-02T16:37
+published: 2026-11-02T16:37:53.141Z
+updated: 2026-11-02T16:37
 review_by:
 status: seedling
 ---
