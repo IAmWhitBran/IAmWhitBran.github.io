@@ -1,3 +1,153 @@
 @use "./variables.scss" as *;
 
 // put your custom CSS here!
+
+/* Text-message dialogue bubbles, built on two custom callout types.
+ *
+ * Markdown usage (each message is its own callout, separated by a blank line):
+ *
+ *   > [!me]
+ *   > What is a digital garden?
+ *
+ *   > [!them|18:42] Brandon
+ *   > A set of notes that grows over time.
+ *
+ * - `me` is the reader: right-hand side, accent colour, like their own phone.
+ * - `them` is the other person: left-hand side, grey.
+ * - The callout title is the sender name. Consecutive messages from the same
+ *   side hide it, so only the first message in a run needs a name.
+ * - Optional text after `|` (a time, "Read", etc.) shows under the bubble.
+ *
+ * Extra keywords: every keyword sits inside an `:is()` list, so a find and
+ * replace of `[data-callout="me"]` with
+ * `[data-callout="me"], [data-callout="reader"]` adds `reader` as an alias
+ * everywhere at once. Swapping the two keywords swaps the sides.
+ *
+ * Plain CSS on purpose: it is valid SCSS for `quartz/styles/custom.scss`
+ * and also works as an Obsidian snippet in `.obsidian/snippets/`. The colour
+ * variables are Obsidian names, which Quartz 5 maps onto its own theme
+ * colours, so light and dark mode follow the site or vault theme.
+ */
+
+/* Per-side settings: the reader on the right */
+.callout:is([data-callout="me"], [data-callout="reader"]) {
+  --bubble-align: flex-end;
+  --bubble-push-left: auto;
+  --bubble-push-right: 0;
+  --bubble-bg: var(--interactive-accent);
+  --bubble-fg: var(--text-on-accent);
+  --bubble-r-tl: var(--bubble-radius);
+  --bubble-r-tr: var(--bubble-top-tail, var(--bubble-radius));
+  --bubble-r-br: var(--bubble-tail);
+  --bubble-r-bl: var(--bubble-radius);
+}
+
+/* Per-side settings: the other person on the left */
+.callout:is([data-callout="them"], [data-callout="writer"]) {
+  --bubble-align: flex-start;
+  --bubble-push-left: 0;
+  --bubble-push-right: auto;
+  --bubble-bg: var(--background-secondary);
+  --bubble-fg: var(--text-normal);
+  --bubble-r-tl: var(--bubble-top-tail, var(--bubble-radius));
+  --bubble-r-tr: var(--bubble-radius);
+  --bubble-r-br: var(--bubble-radius);
+  --bubble-r-bl: var(--bubble-tail);
+}
+
+/* Runs of messages from the same side: tighter gap, no repeated name.
+ * The first two selectors cover Quartz, where callouts are siblings. The
+ * last two cover Obsidian Reading view, which wraps each block in a div. */
+.callout:is([data-callout="me"], [data-callout="reader"]) + .callout:is([data-callout="me"], [data-callout="reader"]),
+.callout:is([data-callout="them"], [data-callout="writer"]) + .callout:is([data-callout="them"], [data-callout="writer"]),
+div:has(> .callout:is([data-callout="me"], [data-callout="reader"])) + div > .callout:is([data-callout="me"], [data-callout="reader"]),
+div:has(> .callout:is([data-callout="them"], [data-callout="writer"])) + div > .callout:is([data-callout="them"], [data-callout="writer"]) {
+  --bubble-gap: 0.2rem;
+  --bubble-name: none;
+  --bubble-top-tail: var(--bubble-tail);
+}
+
+/* The callout becomes a full-width row; the bubble inside it is aligned.
+ * Alignment lives on the inner elements so that callout margin rules from
+ * Obsidian or a theme can't pull a bubble back to the left. */
+.callout:is([data-callout="me"], [data-callout="reader"], [data-callout="them"], [data-callout="writer"]) {
+  --color: var(--text-muted);
+  --bubble-radius: 1.1rem;
+  --bubble-tail: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: var(--bubble-align);
+  margin: var(--bubble-gap, 0.9rem) 0 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+  mix-blend-mode: normal;
+}
+
+/* Sender name above the bubble */
+.callout:is([data-callout="me"], [data-callout="reader"], [data-callout="them"], [data-callout="writer"]) > .callout-title {
+  display: var(--bubble-name, flex);
+  padding: 0 0.75rem 0.2rem;
+  gap: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.callout:is([data-callout="me"], [data-callout="reader"], [data-callout="them"], [data-callout="writer"]) .callout-title-inner {
+  font-weight: 500;
+}
+
+.callout:is([data-callout="me"], [data-callout="reader"], [data-callout="them"], [data-callout="writer"]) .callout-title-inner p {
+  margin: 0;
+}
+
+.callout:is([data-callout="me"], [data-callout="reader"], [data-callout="them"], [data-callout="writer"]) :is(.callout-icon, .callout-fold) {
+  display: none;
+}
+
+/* The bubble itself */
+.callout:is([data-callout="me"], [data-callout="reader"], [data-callout="them"], [data-callout="writer"]) > .callout-content {
+  display: block;
+  box-sizing: border-box;
+  width: fit-content;
+  max-width: min(80%, 32rem);
+  margin: 0 var(--bubble-push-right) 0 var(--bubble-push-left);
+  padding: 0.5rem 0.85rem;
+  border-radius: var(--bubble-r-tl) var(--bubble-r-tr) var(--bubble-r-br) var(--bubble-r-bl);
+  background-color: var(--bubble-bg);
+  color: var(--bubble-fg);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.callout:is([data-callout="me"], [data-callout="reader"], [data-callout="them"], [data-callout="writer"]) > .callout-content > * {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.callout:is([data-callout="me"], [data-callout="reader"], [data-callout="them"], [data-callout="writer"]) > .callout-content > * + * {
+  margin-top: 0.5rem;
+}
+
+.callout:is([data-callout="me"], [data-callout="reader"], [data-callout="them"], [data-callout="writer"]) > .callout-content img {
+  max-width: 100%;
+  border-radius: calc(var(--bubble-radius) - 0.4rem);
+}
+
+/* Links default to the accent colour, which matches the `me` bubble */
+.callout:is([data-callout="me"], [data-callout="reader"]) > .callout-content a {
+  color: inherit;
+  background: none;
+  text-decoration: underline;
+}
+
+/* Optional time or status from `[!them|18:42]` */
+.callout:is([data-callout="me"], [data-callout="reader"], [data-callout="them"], [data-callout="writer"])[data-callout-metadata]:not([data-callout-metadata=""])::after {
+  content: attr(data-callout-metadata);
+  padding: 0.15rem 0.75rem 0;
+  font-size: 0.7rem;
+  color: var(--text-faint);
+}
