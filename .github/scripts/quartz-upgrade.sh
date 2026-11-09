@@ -25,6 +25,11 @@ keep_ours=(README.md)                 # this repo's own text
 pat() { GH_TOKEN="$PAT_TOKEN" gh "$@"; }
 bot() { GH_TOKEN="$BOT_TOKEN" gh "$@"; }
 
+# Pin gh to this repo. Left to guess, gh prefers a remote named `upstream`
+# over `origin`, so once the Quartz remote is added below, every label, issue
+# and pull request call would aim at jackyzha0/quartz instead.
+export GH_REPO="${GH_REPO:-${GITHUB_REPOSITORY:?set GH_REPO or GITHUB_REPOSITORY to this repo, e.g. owner/name}}"
+
 work="$(mktemp -d)"
 
 build_site() { # build_site <checkout dir> <output dir>
