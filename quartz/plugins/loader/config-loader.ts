@@ -41,7 +41,13 @@ import {
   parseCapabilities,
   CapabilityPlugin,
 } from "./capabilities"
-import { absorbingBuiltin, BuiltinPlan, instantiateBuiltins, planBuiltins } from "../builtins"
+import {
+  absorbingBuiltin,
+  BuiltinPlan,
+  instantiateBuiltins,
+  PlannedBuiltin,
+  planBuiltins,
+} from "../builtins"
 import { registerPluginOrigin, reportError, warn } from "../../util/diagnostics"
 import { firstPluginFrame } from "../../util/trace"
 import {
@@ -146,9 +152,10 @@ interface DependencyValidationResult {
   warnings: string[]
 }
 
-function validateDependencies(
+export function validateDependencies(
   entries: PluginJsonEntry[],
   manifests: Map<string, PluginManifest>,
+  builtins: PlannedBuiltin[] = [],
 ): DependencyValidationResult {
   const errors: string[] = []
   const warnings: string[] = []
@@ -172,6 +179,31 @@ function validateDependencies(
       const depEntry = sourceToEntry.get(dep)
       const depName = extractPluginName(dep)
 
+      // A plugin that is built into core now (crawl-links → configuration.links, …) has no entry
+      // to find: its entries are absorbed before this check. The built-in satisfies it.
+      const builtin = depEntry
+        ? undefined
+        : builtins.find((b) => b.spec === absorbingBuiltin({ source: dep } as PluginJsonEntry))
+      if (builtin) {
+        if (!builtin.enabled) {
+          warnings.push(
+            `Plugin "${pluginName}" depends on "${depName}", which is built into Quartz now as ` +
+              `configuration.${builtin.spec.configKey} and is disabled. "${pluginName}" may not function correctly.`,
+          )
+        } else if (
+          pluginOrder < builtin.order &&
+          [manifest.category].flat().includes(builtin.spec.category)
+        ) {
+          // order only decides between plugins of the same stage (a transformer after links)
+          errors.push(
+            `Plugin "${pluginName}" (order: ${pluginOrder}) depends on "${depName}" (built in as ` +
+              `configuration.${builtin.spec.configKey}, order: ${builtin.order}), but "${pluginName}" is ` +
+              `configured to run first. Increase "${pluginName}"'s order above ${builtin.order}.`,
+          )
+        }
+        continue
+      }
+
       if (!depEntry) {
         errors.push(
           `Plugin "${pluginName}" requires "${depName}". Run: npx quartz plugin add ${dep}`,
@@ -183,6 +215,8 @@ function validateDependencies(
         warnings.push(
           `Plugin "${pluginName}" depends on "${depName}" which is disabled. "${pluginName}" may not function correctly.`,
         )
+        // it doesn't run, so its order doesn't matter (and its manifest isn't loaded)
+        continue
       }
 
       const depManifest = manifests.get(dep)
@@ -293,7 +327,8 @@ async function readManifestFromPackageJson(source: PluginSource): Promise<Plugin
       defaultOrder: q.defaultOrder,
       defaultEnabled: q.defaultEnabled,
       defaultOptions: q.defaultOptions,
-      configSchema: q.configSchema,
+      // first-party plugins (and Quartz Syncer) call it optionSchema
+      configSchema: q.configSchema ?? q.optionSchema,
       components: q.components,
       frames: q.frames,
     }
@@ -473,7 +508,9 @@ export async function loadQuartzConfig(
   )
 
   // Validate dependencies
-  const validation = validateDependencies(enabledEntries, manifests)
+  // all entries: a dependency that is configured but disabled is a warning, not "missing"
+  // (validateDependencies skips disabled plugins itself)
+  const validation = validateDependencies(pluginEntries, manifests, builtinPlan.builtins)
   for (const warning of validation.warnings) {
     console.warn(styleText("yellow", `⚠`) + ` ${warning}`)
   }
